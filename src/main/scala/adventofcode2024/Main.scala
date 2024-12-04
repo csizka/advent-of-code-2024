@@ -1,9 +1,14 @@
 package adventofcode2024
-import Day1Task1.*
+import D1to2.*
+import D3to4.*
+
+import scala.io.Source
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val d1task1 = sumDiff(parseInput("d1t1.txt"))
-    println(s"$d1task1")
+    printD1()
+    printD2()
+    printD3()
+
   }
 }
