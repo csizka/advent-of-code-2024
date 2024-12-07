@@ -98,14 +98,10 @@ object D6 {
     }
 
     nextCoordOption match {
-      case None => 
-        println("NOT") 
-        false
+      case None => false
       case Some(nextCoords) =>
         val loopFound = prevPositions.getOrElse(curDir, Set()).contains(nextCoords)
-        if (loopFound)
-          println("FOUND")
-          true
+        if (loopFound) true
         else
           val nextVisited = prevPositions + (curDir -> (prevPositions.getOrElse(curDir, Set()) + nextCoords))
           hasLoop(obstacleCoords, maxRowIx, maxColIx, (nextCoords, nextDir), nextVisited)

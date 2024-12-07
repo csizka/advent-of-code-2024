@@ -5,6 +5,7 @@ import D3.*
 import D4.*
 import D5.*
 import D6.*
+import D7.*
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -14,6 +15,7 @@ object Main {
 //    printD4()
 //    printD5()
     printD6()
+//    printD7()
 
   }
 }
