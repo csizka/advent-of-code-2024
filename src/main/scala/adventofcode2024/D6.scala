@@ -69,8 +69,6 @@ object D6 {
         collectSteps(obstacleCoordsByX, obstacleCoordsByY, maxRowIx, maxColIx, ((nextX, nextY), nextDir), nextVisited)
     }
   }
-
-  def calcNextPos(dir: Char)(curPos: (Int, Int)): (Int, Int) = ???
   
   @tailrec
   private def hasLoop(
