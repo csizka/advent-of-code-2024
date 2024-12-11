@@ -2,7 +2,6 @@ package adventofcode2024
 
 import scala.annotation.tailrec
 import scala.io.Source
-import scala.util.matching.Regex
 
 object D11 {
   def parseD11(path: String): List[Long] = {
@@ -11,33 +10,38 @@ object D11 {
     bufferedSource.close()
     nums
   }
+  
+  def splitNum(num: Long, length: Long): List[Long] = {
+    val divisor = Math.pow(10, length / 2).toLong
+    val fstPart = num / divisor
+    val sndPart = num % divisor
+    List(fstPart, sndPart)
+  }
+  
+  def calcNextStones(num: Long): List[Long] = {
+    val length = Math.log10(num).toLong + 1
+    if (num == 0) List(1)
+    else if (length % 2 == 0) {
+      splitNum(num, length)
+    }
+    else List(num * 2024)
+  }
 
   @tailrec
   def d11T1(repetition: Int, stones: List[Long]): Long = {
     if (repetition > 0) {
-      val newStones = stones.flatMap {num =>
-        val length = Math.log10(num).toLong + 1
-        if (num == 0) List(1L)
-        else if (length % 2 == 0) List(num / Math.pow(10, length/ 2).toLong, num % Math.pow(10, length/ 2).toLong)
-        else List(num * 2024L)
-      }
-        d11T1(repetition - 1, newStones)
-    } else stones.sum
+      val newStones = stones.flatMap(calcNextStones)
+      d11T1(repetition - 1, newStones)
+    } else stones.size
   }
 
   @tailrec
   def d11T2(repetition: Int, stones: Map[Long, Long]): Long = {
     if (repetition > 0) {
       val newStones = stones.foldLeft(Map[Long, Long]()) { case (curMap, (num, repetition)) =>
-        val length = Math.log10(num).toLong + 1
-        if (num == 0L) curMap + (1L -> (curMap.getOrElse(1L, 0L) + repetition))
-        else if (length % 2 == 0) 
-          val fstNum = num / Math.pow(10, length / 2).toLong
-          val sndNum = num % Math.pow(10, length / 2).toLong
-          val nextMap = curMap + 
-            (fstNum -> (curMap.getOrElse(fstNum, 0L) + repetition))
-          nextMap + (sndNum -> (nextMap.getOrElse(sndNum, 0L) + repetition))
-        else curMap + (num * 2024 -> (curMap.getOrElse(num * 2024, 0L) + repetition))
+        calcNextStones(num).foldLeft(curMap){ case (newMap, newNum) =>
+          newMap + (newNum -> (newMap.getOrElse(newNum, 0L) + repetition))
+        }
       }
       d11T2(repetition - 1, newStones)
     } else stones.values.sum
