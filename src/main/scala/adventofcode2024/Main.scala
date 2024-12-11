@@ -23,8 +23,8 @@ object Main {
 //    printD7()
 //    printD8()
 //    printD9()
-//    printD10()
-    printD11()
+    printD10()
+//    printD11()
 
   }
 }

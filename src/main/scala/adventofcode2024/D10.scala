@@ -5,37 +5,29 @@ import scala.annotation.tailrec
 
 object D10 {
 
-  def findStartCoords(map: Vector[Vector[Int]], maxX: Int, maxY: Int): List[(Int, Int)] = {
+  def findStartCoords(map: Vector[Vector[Int]], maxX: Int, maxY: Int): Vector[(Int, Int)] = {
     (for {
       x <- 0 to maxX
       y <- 0 to maxY
-    } yield (x,y)).filter(map(_)(_) == 0).toList
+    } yield (x,y)).filter(map(_)(_) == 0).toVector
   }
 
   @tailrec
-  def countScore(curCoord: Set[(Int, Int)], curNum: Int, map: Vector[Vector[Int]], maxX: Int , maxY: Int): Int = {
+  def calcRouteMetric[C <: Iterable](curCoord: C[(Int, Int)], curNum: Int, map: Vector[Vector[Int]], maxX: Int , maxY: Int): Int = {
     val nextCoords = curCoord.flatMap((x,y) => Set((x - 1,y), (x + 1,y), (x,y - 1), (x,y + 1))
-        .filter((curX,curY) => curX >= 0 && curX <= maxX && curY >= 0 && curY <= maxY && map(curX)(curY) == curNum + 1))
-    if (curNum == 8) nextCoords.size
-    else countScore(nextCoords, curNum + 1, map, maxX, maxY)
-  }
-  
-  @tailrec
-  def countRating(curCoord: List[(Int, Int)], curNum: Int, map: Vector[Vector[Int]], maxX: Int , maxY: Int): Int = {
-    val nextCoords = curCoord.flatMap((x,y) => List((x - 1,y), (x + 1,y), (x,y - 1), (x,y + 1))
       .filter((curX,curY) => curX >= 0 && curX <= maxX && curY >= 0 && curY <= maxY && map(curX)(curY) == curNum + 1))
     if (curNum == 8) nextCoords.size
-    else countRating(nextCoords, curNum + 1, map, maxX, maxY)
+    else calcRouteMetric(nextCoords, curNum + 1, map, maxX, maxY)
   }
-  
+
   def d10T1(map: Vector[Vector[Int]], maxX: Int, maxY: Int): Int = {
     val zeroCoords = findStartCoords(map, maxX, maxY)
-    zeroCoords.map(coord => countScore(Set(coord), 0, map, maxX, maxY)).sum
+    zeroCoords.map(coord => calcRouteMetric[Set](Set(coord), 0, map, maxX, maxY)).sum
   }
 
   def d10T2(map: Vector[Vector[Int]], maxX: Int, maxY: Int): Int = {
     val zeroCoords = findStartCoords(map, maxX, maxY)
-    zeroCoords.map(coord => countRating(List(coord), 0, map, maxX, maxY)).sum
+    zeroCoords.map(coord => calcRouteMetric[Vector](Vector(coord), 0, map, maxX, maxY)).sum
   }
 
   def printD10(): Unit = {
