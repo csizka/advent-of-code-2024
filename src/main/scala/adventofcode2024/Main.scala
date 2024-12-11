@@ -9,6 +9,7 @@ import D7.*
 import D8.*
 import D9.*
 import D10.*
+import D11.*
 
 
 object Main {
@@ -22,7 +23,8 @@ object Main {
 //    printD7()
 //    printD8()
 //    printD9()
-    printD10()
+//    printD10()
+    printD11()
 
   }
 }
