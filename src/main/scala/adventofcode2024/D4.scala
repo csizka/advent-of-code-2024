@@ -22,7 +22,7 @@ object D4 {
     nextX >= 0 && nextY >= 0 && nextX <= maxX && nextY <= maxY
   }
 
-  def countXmas(puzzle: Vector[Vector[Char]], origin: (Int, Int)): Int = {
+  def countXmasFromXCoords(puzzle: Vector[Vector[Char]], origin: (Int, Int)): Int = {
     val (xX, xY) = origin
     val maxX = puzzle.size - 1
     val maxY = puzzle(0).size - 1
@@ -60,12 +60,12 @@ object D4 {
     } else false
   }
 
-  def printD4(): (Int, Int) = {
+  def d4(): (Int, Int) = {
     val puzzle = parseD4("d4.txt")
     val xCoords = specCoords(puzzle, 'X')
     val aCoords = specCoords(puzzle, 'A')
 
-    val d4t1 = xCoords.map((x, y) => countXmas(puzzle, (x, y))).sum
+    val d4t1 = xCoords.map((x, y) => countXmasFromXCoords(puzzle, (x, y))).sum
     val d4t2 = aCoords.count((x, y) => isXmas(puzzle, (x, y)))
 
     (d4t1,d4t2)

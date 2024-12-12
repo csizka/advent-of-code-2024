@@ -48,43 +48,31 @@ object D12 {
     }
   }
 
-  def areNeighbours(fst: (Int, Int), snd: (Int, Int), dir: Char): Boolean = {
-    val ((fstX, fstY), (sndX, sndY)) = (fst, snd)
-    if (dir == 'h') {
-      fstX == sndX && Math.abs(fstY - sndY) == 1
-    } else {
-      fstY == sndY && Math.abs(fstX - sndX) == 1
-    }
-  }
-
-  def collectSortedNeighbours(coords: Vector[Vector[(Int, Int)]], dir: Char): Vector[(Int, Int)] = {
-    coords.flatMap {
+  def collectSortedNeighbours(coords: Vector[Int]): Int = coords match {
       case head +: rest =>
         val (collectedNeighbours, lastNeighbour) =
-          rest.foldLeft(Vector[(Int, Int)](), head) { case ((curCollectedNeighbours, prevCoord), curCoord) =>
-            if (areNeighbours(prevCoord, curCoord, dir)) (curCollectedNeighbours :+ prevCoord, curCoord)
-            else (curCollectedNeighbours, curCoord)
+          rest.foldLeft(0, head) { case ((curCountOfPairs, prevCoord), curCoord) =>
+            if (Math.abs(curCoord - prevCoord) == 1) (curCountOfPairs + 1, curCoord)
+            else (curCountOfPairs, curCoord)
         }
         collectedNeighbours
-      case _ => Vector()
-    }
+      case _ => 0
   }
 
   def calcDiscountPerimeter(neighbourInfo: Set[((Int, Int), Char)]): Int = {
     val originalPerimeter = neighbourInfo.size
 
-    val sameDirMap = neighbourInfo.groupBy(_._2).map{
+    val connections = neighbourInfo.groupBy(_._2).map{
       case (dir, neighboursWDir) if dir == 'u' || dir == 'd' =>
         val sameRowNeighbours = neighboursWDir.map((coord, dir) => coord).toVector.groupBy((row, col) => row).toVector
-        val sortedNeighbours = sameRowNeighbours.map { case (row, coords) => coords.sortBy((row, col) => col) }
-        collectSortedNeighbours(sortedNeighbours, 'h')
+        val sortedNeighbours = sameRowNeighbours.map { case (row, coords) => coords.flatMap { case (row, col) => Vector(col)}.sorted }
+        sortedNeighbours.map(collectSortedNeighbours).sum
       case (dir, neighboursWDir)  =>
         val sameColNeighbours = neighboursWDir.map((coord, dir) => coord).toVector.groupBy((row, col) => col).toVector
-        val sortedNeighbours = sameColNeighbours.map { case (col, coords) => coords.sortBy((row, col) => row) }
-        collectSortedNeighbours(sortedNeighbours, 'v')
-    }.flatten
+        val sortedNeighbours = sameColNeighbours.map { case (col, coords) => coords.flatMap { case (row, col) => Vector(row)}.sorted }
+        sortedNeighbours.map(collectSortedNeighbours).sum
+    }.sum
 
-    val connections = sameDirMap.size
     originalPerimeter - connections
   }
 
@@ -105,11 +93,10 @@ object D12 {
   }
 
 
-  def printD12(): Unit = {
+  def d12(): (Int, Int) = {
     val map = parseD12("d12.txt")
     val flowers = groupedCoordsByFlower(map)
     val (d12t1, d12t2) = d12(flowers)
-    println(d12t1)
-    println(d12t2)
+    (d12t1,d12t2)
   }
 }

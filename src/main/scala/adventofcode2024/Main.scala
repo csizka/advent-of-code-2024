@@ -18,8 +18,7 @@ object Main {
     assert(d1() == (1151792, 21790168))
     assert(d2() == (220, 296))
     assert(d3() == (174960292, 56275602))
-    assert(printD4() == (2483, 1925))
-
+    assert(d4() == (2483, 1925))
 //    printD5()
 //    printD6()
 //    printD7()
@@ -27,7 +26,7 @@ object Main {
 //    printD9()
 //    printD10()
 //    printD11()
-//    printD12()
+    assert(d12() == (1461806, 887932))
 
 
   }
