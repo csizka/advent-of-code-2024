@@ -75,10 +75,12 @@ object D12 {
 
     val sameDirMap = neighbourInfo.groupBy(_._2).map{
       case (dir, neighboursWDir) if dir == 'u' || dir == 'd' =>
-        val sortedNeighbours = neighboursWDir.map(_._1).toVector.groupBy(_._1).toVector.map { case (col, coords) => coords.sortBy(_._2) }
+        val sameRowNeighbours = neighboursWDir.map((coord, dir) => coord).toVector.groupBy((row, col) => row).toVector
+        val sortedNeighbours = sameRowNeighbours.map { case (row, coords) => coords.sortBy((row, col) => col) }
         collectSortedNeighbours(sortedNeighbours, 'h')
       case (dir, neighboursWDir)  =>
-        val sortedNeighbours = neighboursWDir.map(_._1).toVector.groupBy(_._2).toVector.map { case (col, coords) => coords.sortBy(_._1) }
+        val sameColNeighbours = neighboursWDir.map((coord, dir) => coord).toVector.groupBy((row, col) => col).toVector
+        val sortedNeighbours = sameColNeighbours.map { case (col, coords) => coords.sortBy((row, col) => row) }
         collectSortedNeighbours(sortedNeighbours, 'v')
     }.flatten
 

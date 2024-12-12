@@ -4,72 +4,70 @@ import scala.annotation.tailrec
 import scala.io.Source
 
 object D4 {
-  //Day4 parser
-  def parsePuzzle(path: String): Vector[Vector[Char]] = {
-    val lines = Source.fromResource(path).getLines
-    lines.toVector.map(_.toVector)
+  def parseD4(path: String): Vector[Vector[Char]] = {
+    val source = Source.fromResource(path)
+    val puzzle = source.getLines.toVector.map(_.toVector)
+    source.close()
+    puzzle
   }
 
   val xmas = Vector('X', 'M', 'A', 'S')
 
-  def allCoords(v: Vector[Vector[Char]]): Set[(Int, Int)] = {
-    v.indices.flatMap(x => v(x).indices.map(y => (x, y))).toSet
+  def specCoords(puzzle: Vector[Vector[Char]], char: Char): Vector[(Int, Int)] = {
+    puzzle.indices.flatMap(x => puzzle(x).indices.map(y => (x, y))).toVector.filter(puzzle(_)(_) == char)
   }
 
-  def xCoords(v: Vector[Vector[Char]], allCoords: Set[(Int, Int)]): Set[(Int, Int)] = {
-    allCoords.filter(v(_)(_) == 'X')
+  def isValidCoord(nextCoord: (Int, Int), maxX: Int, maxY: Int): Boolean = {
+    val (nextX, nextY) = nextCoord
+    nextX >= 0 && nextY >= 0 && nextX <= maxX && nextY <= maxY
   }
 
-  def countXmas(v: Vector[Vector[Char]], origin: (Int, Int), allCoords: Set[(Int, Int)]): Int = {
+  def countXmas(puzzle: Vector[Vector[Char]], origin: (Int, Int)): Int = {
     val (xX, xY) = origin
+    val maxX = puzzle.size - 1
+    val maxY = puzzle(0).size - 1
 
     @tailrec
-    def isXMas(coords: List[(Int, Int)]): Boolean = {
-      val (curX, curY) = coords.head
-      val (prevX, prevY) = coords.tail.head
+    def isXMas(coords: Vector[(Int, Int)]): Boolean = {
+      val (curX, curY) +: (prevX, prevY) +: rest: Vector[(Int, Int)] = coords
       val (nextX, nextY) = (curX + (curX - prevX), curY + (curY - prevY))
-      val letterIsCorrect = xmas(coords.size - 1) == v(curX)(curY)
-      val foundAllLetters = coords.size == xmas.size
-      val nextIsValidCoord = allCoords.contains((nextX, nextY))
+      val letterIsCorrect = xmas(coords.size - 1) == puzzle(curX)(curY)
+      val foundAllLetters = coords.size == 4
+      val nextIsValidCoord = isValidCoord((nextX, nextY), maxX, maxY)
       if (letterIsCorrect && foundAllLetters) true
       else if (letterIsCorrect && nextIsValidCoord) isXMas((nextX, nextY) +: coords)
       else false
     }
 
     val nextCoords = (for {
-      x <- xX - 1 to xX + 1
-      y <- xY - 1 to xY + 1
-    } yield (x, y)).toList.filter(allCoords.contains)
-    nextCoords.count((x, y) => isXMas(List((x, y), origin)))
+      x <- xX - 1 to xX + 1 if x >= 0 && x <= maxX
+      y <- xY - 1 to xY + 1 if y >= 0 && y <= maxY
+    } yield (x, y)).toVector
+    nextCoords.count((x, y) => isXMas(Vector((x, y), origin)))
   }
 
-  def aCoords(v: Vector[Vector[Char]], allCoords: Set[(Int, Int)]): Set[(Int, Int)] = {
-    allCoords.filter(v(_)(_) == 'A')
-  }
-
-  def isXmas(v: Vector[Vector[Char]], origin: (Int, Int), allCoords: Set[(Int, Int)]): Boolean = {
+  def isXmas(puzzle: Vector[Vector[Char]], origin: (Int, Int)): Boolean = {
+    val maxX = puzzle.size - 1
+    val maxY = puzzle(0).size - 1
     val (xX, xY) = origin
     val fstCoords = List((xX - 1, xY - 1), (xX + 1, xY + 1))
     val sndCoords = List((xX - 1, xY + 1), (xX + 1, xY - 1))
-    if (fstCoords.forall(allCoords.contains) && sndCoords.forall(allCoords.contains)) {
-      val fst = fstCoords.map(v(_)(_)).mkString("")
-      val snd = sndCoords.map(v(_)(_)).mkString("")
+    if (fstCoords.forall(isValidCoord(_, maxX, maxY)) && sndCoords.forall(isValidCoord(_, maxX, maxY))) {
+      val fst = fstCoords.map(puzzle(_)(_)).mkString("")
+      val snd = sndCoords.map(puzzle(_)(_)).mkString("")
       val isXMas = (fst == "MS" || fst == "SM") && (snd == "MS" || snd == "SM")
-      if (isXMas) true
-      else false
+      isXMas
     } else false
   }
 
-  def printD4(): Unit = {
-    val puzzle = parsePuzzle("d4.txt")
-    val coords = allCoords(puzzle)
-    val xCs = xCoords(puzzle, coords).toList
-    val aCs = aCoords(puzzle, coords)
+  def printD4(): (Int, Int) = {
+    val puzzle = parseD4("d4.txt")
+    val xCoords = specCoords(puzzle, 'X')
+    val aCoords = specCoords(puzzle, 'A')
 
-    val d4t1 = xCs.map((x, y) => countXmas(puzzle, (x, y), coords)).sum
-    val d4t2 = aCs.count((x, y) => isXmas(puzzle, (x, y), coords))
+    val d4t1 = xCoords.map((x, y) => countXmas(puzzle, (x, y))).sum
+    val d4t2 = aCoords.count((x, y) => isXmas(puzzle, (x, y)))
 
-    println(d4t1)
-    println(d4t2)
+    (d4t1,d4t2)
   }
 }

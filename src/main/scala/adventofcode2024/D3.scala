@@ -1,36 +1,37 @@
 package adventofcode2024
 
-import scala.annotation.tailrec
 import scala.io.Source
 import scala.util.matching.Regex
 
 object D3 {
 
-  //Day3
-  val mulMatchPattern: Regex = "mul\\(\\d{1,3},\\d{1,3}\\)".r
+  def parseD3(path: String): String = {
+    val bufferedSource = Source.fromResource(path)
+    val string = bufferedSource.getLines.mkString("")
+    bufferedSource.close()
+    string
+  }
 
-  def parseInputString(path: String): List[(Int, Int)] = {
-    val lines = Source.fromResource(path).getLines
-    val string = lines.mkString("")
+  val t1SearchedValue = "mul\\(\\d{1,3},\\d{1,3}\\)".r
+
+  def productSum(lst: Vector[(Int, Int)]): Int = {
+    lst.map((fst, snd) => fst * snd).sum
+  }
+  
+  def d3T1(input: String): Int = {
     val selectedStrings =
-      mulMatchPattern.
-        findAllIn(string)
-        .toList
+      t1SearchedValue.
+        findAllIn(input)
+        .toVector
         .map(_.split(",").map("\\d+".r.findFirstIn(_)))
-        .map{ case Array(Some(fst), Some(snd)) => (fst.toInt, snd.toInt)}
-    selectedStrings
+        .map { case Array(Some(fst), Some(snd)) => (fst.toInt, snd.toInt) }
+    productSum(selectedStrings)
   }
 
-  def productSum(lst: List[(Int, Int)]): Int = {
-    lst.map( (fst, snd) => fst * snd).sum
-  }
+  val t2SeachedValue = "mul\\(\\d{1,3},\\d{1,3}\\)|do(n't)?\\(\\)".r
 
-  val mulMatchPatternV2: Regex = "mul\\(\\d{1,3},\\d{1,3}\\)|do(n't)?\\(\\)".r
-
-  def day3task2(path: String): Int = {
-    val lines: Iterator[String] = Source.fromResource(path).getLines
-    val string = lines.mkString("")
-    val selectedStrings = mulMatchPatternV2.findAllIn(string).toList
+  def d3T2(input: String): Int = {
+    val selectedStrings = t2SeachedValue.findAllIn(input).toVector
     val (res, lastState) = selectedStrings.foldLeft(0, true) {
       case ((curRes, shouldBeAdded), curStr) => curStr match {
         case "do()" => (curRes, true)
@@ -45,11 +46,11 @@ object D3 {
     res
   }
 
-  def printD3(): Unit = {
-    val d3t1 = productSum(parseInputString("d3t1.txt"))
-    val d3t2 = day3task2("d3t1.txt")
+  def d3(): (Int, Int) = {
+    val parsedInput = parseD3("d3t1.txt")
+    val d3t1 = d3T1(parsedInput)
+    val d3t2 = d3T2(parsedInput)
 
-    println(d3t1)
-    println(d3t2)
+    (d3t1,d3t2)
   }  
 }
