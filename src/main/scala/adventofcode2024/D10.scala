@@ -31,7 +31,7 @@ object D10 {
   }
 
   def printD10(): Unit = {
-    val map = parseMap("d10.txt").map(_.map(_.toInt - 48))
+    val map = parseMap("d10.txt").map(_.map(_.asDigit))
     val maxX = map.size - 1
     val maxY = map(0).size - 1
     val d10t1 = d10T1(map, maxX, maxY)
