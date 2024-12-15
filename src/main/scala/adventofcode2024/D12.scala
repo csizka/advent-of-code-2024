@@ -64,12 +64,22 @@ object D12 {
 
     val connections = neighbourInfo.groupBy(_._2).map{
       case (dir, neighboursWDir) if dir == 'u' || dir == 'd' =>
-        val sameRowNeighbours = neighboursWDir.map((coord, dir) => coord).toVector.groupBy((row, col) => row).toVector
-        val sortedNeighbours = sameRowNeighbours.map { case (row, coords) => coords.flatMap { case (row, col) => Vector(col)}.sorted }
-        sortedNeighbours.map(collectSortedNeighbours).sum
+        val sortedNeighbourCoords = neighboursWDir
+          .map((coord, dir) => coord)
+          .toVector
+          .sortBy((_, col) => col)
+        val sameRowNeighbours = sortedNeighbourCoords
+          .groupBy((row, _) => row)
+          .values
+          .map(_.map((_, col) => col))
+        sameRowNeighbours.map(collectSortedNeighbours).sum
       case (dir, neighboursWDir)  =>
-        val sameColNeighbours = neighboursWDir.map((coord, dir) => coord).toVector.groupBy((row, col) => col).toVector
-        val sortedNeighbours = sameColNeighbours.map { case (col, coords) => coords.flatMap { case (row, col) => Vector(row)}.sorted }
+        val sameColNeighbours = neighboursWDir
+          .map((coord, dir) => coord)
+          .toVector
+          .groupBy((row, col) => col)
+        val sortedNeighbours = sameColNeighbours
+          .map { case (col, coords) => coords.map { case (row, col) => row }.sorted }
         sortedNeighbours.map(collectSortedNeighbours).sum
     }.sum
 
