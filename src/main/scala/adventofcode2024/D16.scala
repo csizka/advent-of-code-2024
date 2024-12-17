@@ -30,6 +30,10 @@ object D16 {
   }
   case class Route(end: Coord, prev: Coord, score: Int)
 
+  case class State(coord: Coord, dir: Coord)
+
+  case class StateRoute(end: State, prev: State, score: Int)
+
   def getRouteCoords(map: Vector[Vector[Char]]): (Set[Coord], Coord, Coord) = {
     val coords = map.indices.toSet.flatMap(x => map(x).indices.map( y => Coord(x, y)))
     val routeCoords = coords.filter(coord => map(coord.x)(coord.y) != '#')
@@ -81,6 +85,10 @@ object D16 {
     override def compare(x: Route, y: Route): Int = x.score - y.score
   }
 
+  val orderStateRoutes = new Ordering[StateRoute] {
+    override def compare(x: StateRoute, y: StateRoute): Int = x.score - y.score
+  }
+
   def d16T1(routeCoords: Set[Coord], startCoord: Coord, endCoord: Coord): Int = {
     val toExplore = mutable.PriorityQueue(Route(startCoord, startCoord - Coord(0, 1), 0))(orderRoutes)
     val foundRoutes = Map[Coord, Route]()
@@ -98,73 +106,92 @@ object D16 {
   }
 
   @tailrec
-  def cheapestRoutes(
-    toExplore: PriorityQueue[Route],
-    routeCoords: Set[Coord],
-    foundRoutes: Map[Coord, Set[Route]],
-    startCoord: Coord,
-    endCoord: Coord
-  ): (Set[Coord], Int) = {
-    if (toExplore.isEmpty)
-      val endMinScore = foundRoutes(endCoord).minBy(_.score).score
-      val finalFoundRoutes = foundRoutes + (endCoord -> foundRoutes(endCoord).filter(_.score == endMinScore)) + (startCoord -> Set())
-      println("")
-      (rollBackAllRoutes(Set(endCoord), Set[Coord](), finalFoundRoutes, startCoord), foundRoutes(endCoord).head.score)
-    else {
-      val curRoute = toExplore.dequeue()
-      val curCoord = curRoute.end
-      val prevCoord = curRoute.prev
-      val curScore = curRoute.score
-      val curDir = curCoord - prevCoord
-      val nextCoords = curCoord.getNeighbours.intersect(routeCoords) - prevCoord
-      val nextFoundRoutes = nextCoords.foldLeft(foundRoutes) { case (curFoundRoutes, newCoord) =>
-        val newDir = newCoord - curCoord
-        val scoreToAdd = if (newDir == curDir) 1 else 1001
-        val newScore = curScore + scoreToAdd
-        foundRoutes.get(newCoord) match {
-          case Some(oldRoutes) if oldRoutes.head.score < newScore && oldRoutes.head.score + 1000 != newScore => curFoundRoutes
-          case Some(oldRoutes) if oldRoutes.minBy(_.score).score == newScore ||
-            oldRoutes.minBy(_.score).score + 1000 == newScore ||
-            oldRoutes.minBy(_.score).score - 1000 == newScore =>
-            val newRoute = Route(newCoord, curCoord, newScore)
-            toExplore.enqueue(newRoute)
-            curFoundRoutes + (newCoord -> (curFoundRoutes.getOrElse(newCoord, Set()) + newRoute))
-          case _ =>
-            val newRoute = Route(newCoord, curCoord, newScore)
-            toExplore.enqueue(newRoute)
-            curFoundRoutes + (newCoord -> Set(newRoute))
-        }
-      }
-      cheapestRoutes(toExplore, routeCoords, nextFoundRoutes, startCoord, endCoord)
-    }
-  }
-
-  @tailrec
-  def rollBackAllRoutes(curCoords: Set[Coord], done: Set[Coord], routes: Map[Coord, Set[Route]], startCoord: Coord): Set[Coord] = {
-    val prevs = curCoords.flatMap(coord => routes(coord).map(_.prev))
-    if (curCoords.isEmpty)
+  def rollBackAllRoutes(curStates: Set[State], done: Set[Coord], routes: Map[State, Set[StateRoute]], startCoord: Coord): Set[Coord] = {
+    val prevs = curStates.flatMap(state => routes(state).map(_.prev))
+    if (curStates.isEmpty)
       done
     else
-      rollBackAllRoutes(prevs, done ++ curCoords, routes, startCoord)
+      val newDone = done ++ curStates.map(_.coord)
+      rollBackAllRoutes(prevs, newDone, routes, startCoord)
   }
 
   def d16T2(routeCoords: Set[Coord], startCoord: Coord, endCoord: Coord, map: Vector[Vector[Char]]): Int = {
-    val toExplore = mutable.PriorityQueue(Route(startCoord, startCoord - Coord(0, 1), 0))(orderRoutes)
-    val foundRoutes = Map[Coord, Set[Route]]()
-    val (finalRouteV1, finalScoreV1) = cheapestRoutes(toExplore, routeCoords, foundRoutes, startCoord, endCoord)
-//    prettyPrint(finalRouteV1, map)
-    finalRouteV1.size
+    val startState = State(startCoord, Coord(0,1))
+    val toExplore = mutable.PriorityQueue(StateRoute(startState, State(startCoord + Coord(0, -1), Coord(0,1)), 0))(orderStateRoutes)
+    val foundRoutes = Map[State, Set[StateRoute]]()
+    val finalRoute = cheapestRoutes(toExplore, routeCoords, foundRoutes, startCoord, endCoord, None)
+    finalRoute.size
   }
 
-  def d16(): Unit = {
+  @tailrec
+  def cheapestRoutes(
+    toExplore: PriorityQueue[StateRoute],
+    routeCoords: Set[Coord],
+    foundRoutes: Map[State, Set[StateRoute]],
+    startCoord: Coord,
+    endCoord: Coord,
+    foundMin: Option[Int]
+  ): Set[Coord]= {
+    if (toExplore.isEmpty)
+      val startState = State(startCoord, Coord(0,1))
+      val finalFoundRoutes = foundRoutes + (startState -> Set[StateRoute]())
+      val endRoues =
+        Set(Coord(0, -1), Coord(0, 1), Coord(-1, 0), Coord(1, 0))
+          .map(State(endCoord, _))
+          .intersect(foundRoutes.keySet)
+      val minFinalEndRouteScore = endRoues.map(finalFoundRoutes(_).head.score).min
+      val finalEndRoutes = endRoues.filter(finalFoundRoutes(_).head.score == minFinalEndRouteScore)
+      rollBackAllRoutes(finalEndRoutes, Set[Coord](), finalFoundRoutes, startCoord)
+    else {
+      val curStateRoute = toExplore.dequeue()
+      val curState = curStateRoute.end
+      val prevState = curStateRoute.prev
+      val curScore = curStateRoute.score
+      val curDir = curState.dir
+      val nextCoords = curState.coord.getNeighbours.intersect(routeCoords) - prevState.coord
+      val (nextFoundStateRoutes, newMinOpt) = nextCoords.foldLeft(foundRoutes, foundMin) { case ((curFoundRoutes, curMinOpt), newCoord) =>
+        val newDir = newCoord - curState.coord
+        val scoreToAdd = if (newDir == curDir) 1 else 1001
+        val newScore = curScore + scoreToAdd
+        curMinOpt match {
+          case Some(curMin) if curMin < newScore => (curFoundRoutes, curMinOpt)
+          case _ =>
+            val newState = State(newCoord, newDir)
+            foundRoutes.get(newState) match {
+              case _ if newCoord == endCoord =>
+                val newRoute = StateRoute(newState, curState, newScore)
+                toExplore.enqueue(newRoute)
+                (curFoundRoutes + (newState -> Set(newRoute)), Some(newScore))
+              case Some(oldRoutes) if oldRoutes.head.score == newScore =>
+                val newRoute = StateRoute(newState, curState, newScore)
+                toExplore.enqueue(newRoute)
+                (curFoundRoutes + (newState -> (curFoundRoutes.getOrElse(newState, Set()) + newRoute)), curMinOpt)
+              case Some(oldRoutes) if oldRoutes.head.score < newScore =>
+                (curFoundRoutes, curMinOpt)
+              case _ =>
+                val newRoute = StateRoute(newState, curState, newScore)
+                toExplore.enqueue(newRoute)
+                (curFoundRoutes + (newState -> Set(newRoute)), curMinOpt)
+            }
+        }
+
+      }
+      cheapestRoutes(toExplore, routeCoords, nextFoundStateRoutes, startCoord, endCoord, newMinOpt)
+    }
+  }
+
+  def d16(): (Int, Int) = {
     val map = parseD16("d16.txt")
     val (routeCoords, startCoord, targetCoord) = getRouteCoords(map)
-//    val d16t1 = d16T1(routeCoords, startCoord, targetCoord)
+    val d16t1 = d16T1(routeCoords, startCoord, targetCoord)
     val d16t2 = d16T2(routeCoords, startCoord, targetCoord, map)
 
-//    println(d16t1)
-    println(d16t2)
+    (d16t1,d16t2)
   }
+
+
+
+
 
   def main(args: Array[String]): Unit = {
 
