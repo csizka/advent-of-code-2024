@@ -107,8 +107,9 @@ object D16 {
   ): (Set[Coord], Int) = {
     if (toExplore.isEmpty)
       val endMinScore = foundRoutes(endCoord).minBy(_.score).score
-      val finalFoundRoutes = foundRoutes + (endCoord -> foundRoutes(endCoord).filter(_.score == endMinScore))
-      (rollBackAllRoutes(Vector(Vector(endCoord)), Set[Coord](), finalFoundRoutes, startCoord), foundRoutes(endCoord).head.score)
+      val finalFoundRoutes = foundRoutes + (endCoord -> foundRoutes(endCoord).filter(_.score == endMinScore)) + (startCoord -> Set())
+      println("")
+      (rollBackAllRoutes(Set(endCoord), Set[Coord](), finalFoundRoutes, startCoord), foundRoutes(endCoord).head.score)
     else {
       val curRoute = toExplore.dequeue()
       val curCoord = curRoute.end
@@ -139,30 +140,29 @@ object D16 {
   }
 
   @tailrec
-  def rollBackAllRoutes(curBest: Vector[Vector[Coord]], done: Set[Coord], routes: Map[Coord, Set[Route]], startCoord: Coord): Set[Coord] = {
-    val prevs = curBest.flatMap(vector => routes(vector.head).toVector.map(_.prev +: vector))
-    val newDone = prevs.filter(_.head == startCoord).flatten.toSet ++ done
-    if (prevs.forall(_.head == startCoord)) 
-      newDone
-    else 
-      rollBackAllRoutes(prevs, newDone, routes, startCoord)
+  def rollBackAllRoutes(curCoords: Set[Coord], done: Set[Coord], routes: Map[Coord, Set[Route]], startCoord: Coord): Set[Coord] = {
+    val prevs = curCoords.flatMap(coord => routes(coord).map(_.prev))
+    if (curCoords.isEmpty)
+      done
+    else
+      rollBackAllRoutes(prevs, done ++ curCoords, routes, startCoord)
   }
 
   def d16T2(routeCoords: Set[Coord], startCoord: Coord, endCoord: Coord, map: Vector[Vector[Char]]): Int = {
     val toExplore = mutable.PriorityQueue(Route(startCoord, startCoord - Coord(0, 1), 0))(orderRoutes)
     val foundRoutes = Map[Coord, Set[Route]]()
     val (finalRouteV1, finalScoreV1) = cheapestRoutes(toExplore, routeCoords, foundRoutes, startCoord, endCoord)
-    prettyPrint(finalRouteV1, map)
-    (finalRouteV1).size
+//    prettyPrint(finalRouteV1, map)
+    finalRouteV1.size
   }
 
   def d16(): Unit = {
     val map = parseD16("d16.txt")
     val (routeCoords, startCoord, targetCoord) = getRouteCoords(map)
-    val d16t1 = d16T1(routeCoords, startCoord, targetCoord)
+//    val d16t1 = d16T1(routeCoords, startCoord, targetCoord)
     val d16t2 = d16T2(routeCoords, startCoord, targetCoord, map)
 
-    println(d16t1)
+//    println(d16t1)
     println(d16t2)
   }
 
