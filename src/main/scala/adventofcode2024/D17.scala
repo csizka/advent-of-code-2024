@@ -1,23 +1,24 @@
 package adventofcode2024
+
 import java.lang.Math.*
 import scala.io.Source
 import scala.annotation.tailrec
 
 object D17 {
 
-  case class Status(a: Int, b: Int, c: Int, pointer: Int, prevOutputs: Vector[Int]) {
-    def update(toUpdate: Char, newVal: Int): Status = toUpdate match {
+  case class Status(a: Long, b: Long, c: Long, pointer: Int, prevOutputs: Vector[Int]) {
+    def update(toUpdate: Char, newVal: Long): Status = toUpdate match {
       case 'a' => Status(newVal, b, c, pointer, prevOutputs)
       case 'b' => Status(a, newVal, c, pointer, prevOutputs)
       case 'c' => Status(a, b, newVal, pointer, prevOutputs)
-      case 'p' => Status(a, b, c, newVal, prevOutputs)
+      case 'p' => Status(a, b, c, newVal.toInt, prevOutputs)
     }
 
     def update(plusOutput: Vector[Int]): Status = {
       Status(a, b, c, pointer, prevOutputs ++ plusOutput)
     }
 
-    def calcComboOp(opIx: Int): Int = opIx match {
+    def calcComboOp(opIx: Int): Long = opIx match {
       case num if num <= 3 => num
       case 4 => a
       case 5 => b
@@ -39,21 +40,21 @@ object D17 {
     def apply(): Status
   }
 
-  case class Operator0(comboOp: Int, status: Status) extends Operator {
+  case class Operator0(comboOp: Long, status: Status) extends Operator {
     override def apply(): Status = {
-      val newA = status.a / pow(2, comboOp).toInt
+      val newA = status.a / pow(2, comboOp).toLong
       status.update('a', newA).update('p', status.pointer + 2)
     }
   }
 
   case class Operator1(op: Int, status: Status) extends Operator  {
     override def apply(): Status = {
-      val newB = status.b^op
+      val newB = status.b^op.toLong
       status.update('b', newB).update('p', status.pointer + 2)
     }
   }
 
-  case class Operator2(comboOp: Int, status: Status) extends Operator {
+  case class Operator2(comboOp: Long, status: Status) extends Operator {
     override def apply(): Status = {
       val newB = comboOp % 8
       status.update('b', newB).update('p', status.pointer + 2)
@@ -76,23 +77,23 @@ object D17 {
     }
   }
 
-  case class Operator5(comboOp: Int, status: Status) extends Operator {
+  case class Operator5(comboOp: Long, status: Status) extends Operator {
     override def apply(): Status = {
       val nexPrint = comboOp % 8
-      status.update(Vector(nexPrint)).update('p', status.pointer + 2)
+      status.update(Vector(nexPrint.toInt)).update('p', status.pointer + 2)
     }
   }
 
-  case class Operator6(comboOp: Int, status: Status) extends Operator {
+  case class Operator6(comboOp: Long, status: Status) extends Operator {
     override def apply(): Status = {
-      val newB = status.a / pow(2, comboOp).toInt
+      val newB = status.a / pow(2, comboOp).toLong
       status.update('b', newB).update('p', status.pointer + 2)
     }
   }
 
-  case class Operator7(comboOp: Int, status: Status) extends Operator {
+  case class Operator7(comboOp: Long, status: Status) extends Operator {
     override def apply(): Status = {
-      val newC = status.a / pow(2, comboOp).toInt
+      val newC = status.a / pow(2, comboOp).toLong
       status.update('c', newC).update('p', status.pointer + 2)
     }
   }
@@ -113,7 +114,6 @@ object D17 {
   def doOperation(instructions: Vector[Int], status: Status): Vector[Int] = {
     if (status.pointer >= instructions.size || status.pointer < 0) status.prevOutputs
     else {
-      println(status)
       val curOperatorInst = instructions(status.pointer)
       val curOperand = instructions.lift(status.pointer + 1)
       parseOperator(curOperatorInst, curOperand, status) match {
@@ -123,11 +123,29 @@ object D17 {
     }
   }
 
+  @tailrec
+  def doOperationV2(instructions: Vector[Int], status: Status, res: Vector[Int]): Vector[Int] = {
+    val lastPIx = status.prevOutputs.size - 1
+    if (status.pointer >= instructions.size ||
+      status.pointer < 0 ||
+      (lastPIx > -1 && status.prevOutputs(lastPIx) != res(lastPIx))) status.prevOutputs
+    else {
+      val curOperatorInst = instructions(status.pointer)
+      val curOperand = instructions.lift(status.pointer + 1)
+      parseOperator(curOperatorInst, curOperand, status) match {
+        case None => status.prevOutputs
+        case Some(op) => doOperationV2(instructions, op.apply(), res)
+      }
+    }
+  }
+
   def d17(): Unit = {
     val (startStatus, instructions) = parseD17("test.txt")
     val d17t1 = doOperation(instructions, startStatus)
+    val res = Vector(2,4,1,2,7,5,4,3,0,3,1,7,5,5,3,0)
+    val d17t2 = (1 to 100000).find(num => doOperationV2(instructions, startStatus.update('a', num), res) == res)
 
-    println(d17t1)
+    println(d17t2)
   }
 
   def main(args: Array[String]): Unit = {

@@ -189,10 +189,6 @@ object D16 {
     (d16t1,d16t2)
   }
 
-
-
-
-
   def main(args: Array[String]): Unit = {
 
     d16()
