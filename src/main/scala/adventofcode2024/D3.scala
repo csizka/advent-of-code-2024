@@ -47,7 +47,7 @@ object D3 {
   }
 
   def d3(): (Int, Int) = {
-    val parsedInput = parseD3("d3t1.txt")
+    val parsedInput = parseD3("d3.txt")
     val d3t1 = d3T1(parsedInput)
     val d3t2 = d3T2(parsedInput)
 

@@ -61,7 +61,7 @@ object D2 {
   }
 
   def d2(): (Int, Int) = {
-    val parsedReports = parseD2("d2t1.txt")
+    val parsedReports = parseD2("d2.txt")
     val d2t1 = countSafeReports(parsedReports, levelsAreSafe)
     val d2t2 = countSafeReports(parsedReports, levelsAreSafeModified)
     (d2t1,d2t2)

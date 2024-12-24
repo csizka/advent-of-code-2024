@@ -26,8 +26,8 @@ object D1 {
   }
 
   def d1(): (Int, Int) = {
-    val d1t1 = sumDiff(parseD1("d1t1.txt"))
-    val d1t2 = similarityScore(parseD1("d1t1.txt"))
+    val d1t1 = sumDiff(parseD1("d1.txt"))
+    val d1t2 = similarityScore(parseD1("d1.txt"))
     (d1t1,d1t2)
   }
 }

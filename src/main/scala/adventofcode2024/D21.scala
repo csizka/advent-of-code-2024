@@ -141,6 +141,6 @@ object D21 {
 //    val d21t2 = d21T2(inputs)
 //    println(d21t1)
 //    println(d21t2)
-    
+
   }
 }
