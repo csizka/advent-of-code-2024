@@ -2,6 +2,7 @@ package adventofcode2024
 
 import scala.annotation.tailrec
 import scala.io.Source
+import scala.collection.parallel.CollectionConverters._
 
 object D22 {
   def parseD22(path: String): Vector[Long] = {
@@ -58,7 +59,7 @@ object D22 {
       zipPatterns(nums, changes)
     }
     val allPatterns = searchPools.toSet.flatMap(findAllPatterns)
-    allPatterns.toVector.zipWithIndex.map{ case (pattern, ix) =>
+    allPatterns.toVector.zipWithIndex.par.map{ case (pattern, ix) =>
       if (ix % 1000 == 0) println(ix)
       searchPools.map(getBanana(_, pattern)).sum
     }.max

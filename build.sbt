@@ -6,5 +6,8 @@ ThisBuild / organization := "adventofcode2024"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "advent-of-code-2024"
+    name := "advent-of-code-2024",
+    libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.1.0",
+    )
   )
