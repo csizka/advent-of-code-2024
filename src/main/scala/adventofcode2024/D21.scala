@@ -24,6 +24,8 @@ object D21 {
     }
   }
 
+  case class Step(from:Coord, to: Coord)
+
   val coordFromChar = Map(
     '7'->Coord(0,0), '8'->Coord(0,1), '9'->Coord(0,2),
     '4'->Coord(1,0), '5'->Coord(1,1), '6'->Coord(1,2),
@@ -113,9 +115,34 @@ object D21 {
     case Vector() => moves
   }
 
+  def coordToStep(curCoords: Vector[Coord], nextLevel: Int): Vector[(Step, Int)] = {
+    val froms = push +: curCoords
+    froms.zip(curCoords).map{ case(from, to) => (Step(from, to), nextLevel)}
+  }
+
+  def movesFromRobotToRobotV2(
+    toPress: Vector[(Step, Int)],
+    saved: scala.collection.mutable.Map[(Step, Int), Long],
+    moveCount: Long = 0,
+  ): Long = toPress match {
+    case (nextStep, nextLevel) +: rest =>
+      if (saved.contains((nextStep, nextLevel))) movesFromRobotToRobotV2(rest, saved, moveCount + saved((nextStep, nextLevel)))
+      else if (nextLevel == 25) {
+        saved += ((nextStep, nextLevel) -> 1)
+        movesFromRobotToRobotV2(rest, saved, moveCount + 1)
+      }
+      else {
+        val nextLevelCoords = movesFromRobotToRobot(Vector(nextStep.to), coordFromDir(nextStep.from), Vector[Coord]())
+        val nextSteps = coordToStep(nextLevelCoords, nextLevel + 1)
+        val count = movesFromRobotToRobotV2(nextSteps, saved, 0)
+        saved += ((nextStep, nextLevel) -> count)
+        movesFromRobotToRobotV2(rest, saved, moveCount + count)
+      }
+    case Vector() => moveCount
+  }
+
   @tailrec
   def callRobotToRobotNTimes(prevInput: Vector[Coord], repetitions: Int): Vector[Coord] = {
-    println(repetitions)
     if (repetitions == 1) movesFromRobotToRobot(prevInput)
     else callRobotToRobotNTimes(movesFromRobotToRobot(prevInput), repetitions - 1)
   }
@@ -130,17 +157,26 @@ object D21 {
     inputs.map(curChars => getNum(curChars) * callRobotToRobotNTimes(finalPadMovesFromFstRobot(curChars), 2).size).sum
   }
 
-  def d21T2(inputs: Vector[Vector[Char]]): Int = {
-    inputs.map(curChars => getNum(curChars) * callRobotToRobotNTimes(finalPadMovesFromFstRobot(curChars), 25).size).sum
+  def d21T2(inputs: Vector[Vector[Char]]): Long = {
+    val startMap = scala.collection.mutable.Map[(Step, Int), Long]()
+    val res = inputs.map {
+      curChars =>
+        val fstPadInput = finalPadMovesFromFstRobot(curChars)
+        val fstSteps = coordToStep(fstPadInput, 0)
+        val stepCount = movesFromRobotToRobotV2(fstSteps, startMap)
+
+        getNum(curChars) * stepCount
+    }.sum
+    res
   }
 
 
   def main(args: Array[String]): Unit = {
     val inputs = parseD21("d21.txt")
-//    val d21t1 = d21T1(inputs)
-//    val d21t2 = d21T2(inputs)
-//    println(d21t1)
-//    println(d21t2)
+    val d21t1 = d21T1(inputs)
+    val d21t2 = d21T2(inputs)
+    assert(d21t1 == 205160)
+    assert(d21t2 == 252473394928452L)
 
   }
 }
