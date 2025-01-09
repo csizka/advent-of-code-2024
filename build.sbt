@@ -9,5 +9,7 @@ lazy val root = (project in file("."))
     name := "advent-of-code-2024",
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %% "scala-parallel-collections" % "1.1.0",
-    )
+      "guru.nidi" % "graphviz-java" % "0.18.1",
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
+    ),
   )

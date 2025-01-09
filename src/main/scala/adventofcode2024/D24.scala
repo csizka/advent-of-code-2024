@@ -2,6 +2,15 @@ package adventofcode2024
 import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 import scala.io.Source
+import guru.nidi.graphviz.attribute.Attributes.attr
+import guru.nidi.graphviz.attribute.{Color, Font, Rank, SimpleLabel, Style}
+import guru.nidi.graphviz.engine.{Format, Graphviz}
+import guru.nidi.graphviz.model.{Node, Factory as gviz}
+import guru.nidi.graphviz.attribute.Rank.RankDir.*
+import guru.nidi.graphviz.model.Factory.{graph, node}
+import guru.nidi.graphviz.model.Link.to
+
+import java.io.File
 
 object D24 {
   enum Operation {
@@ -62,7 +71,7 @@ object D24 {
     val res = relevantVals.zipWithIndex.map((valName, ix) => vals(valName) * Math.pow(2, ix).toLong).sum
     res
   }
-  
+
   def getDepsAndIngates(gates: Set[Gate]): (Map[String, InGate], Map[String, Set[String]]) = {
     val (dependencies, outputs) =
       gates.foldLeft(Map[String, InGate](), Map[String, Set[String]]()) { case ((curDeps, curOuts), Gate(fst, snd, out, op)) =>
@@ -126,15 +135,35 @@ object D24 {
     orderToEval(newDeps, inputVars, newOutputs)
   }
 
-  def d24T2(gates: Set[Gate], vals: Map[String, Int], numToSwap: Int): Vector[String] = {
+  def d24T2(vals: Map[String, Int], numToSwap: Int, dependencies: Map[String, InGate],  outputs: Map[String, Set[String]]): Vector[String] = {
     val expRes = getExpectedRes(vals)
-    val (dependencies, outputs) = getDepsAndIngates(gates)
     ???
+  }
+
+  def collectLinks(dependencies: Map[String, InGate]): Seq[guru.nidi.graphviz.model.LinkSource] = {
+    dependencies.toSeq.flatMap { case outVar -> curIngate =>
+      val nodeLabel = s"${curIngate.operation.toString.toUpperCase} -> $outVar"
+      Seq(
+        node(curIngate.lhsIn).link(node(outVar).`with`("label", nodeLabel)),
+        node(curIngate.rhsIn).link(node(outVar).`with`("label", nodeLabel))
+      )
+    }
   }
 
   def main(args: Array[String]): Unit = {
     val (gates, startVals) = parseD24("d24.txt")
+    val (dependencies, outputs) = getDepsAndIngates(gates)
 //    val d24t1 = d24T1(gates, startVals)
+//    val d24t2 = d24T2(startVals, 1, dependencies, outputs)
+
+    val g = graph("graph")
+      .directed
+      .graphAttr.`with`(Rank.dir(LEFT_TO_RIGHT))
+      .nodeAttr.`with`(Font.name("arial"))
+      .linkAttr.`with`("class", "link-class")
+      .`with`(collectLinks(dependencies)*)
+
+    Graphviz.fromGraph(g).height(100).render(Format.SVG).toFile(new File("example/graph.svg"))
 //    println(d24t1)
   }
 }
