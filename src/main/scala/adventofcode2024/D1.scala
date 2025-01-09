@@ -24,10 +24,11 @@ object D1 {
     val rhsCount = rhs.groupBy(identity).map((num, lst) => (num, lst.size))
     lhsCount.map((num, count) => rhsCount.getOrElse(num, 0) * num * count).sum
   }
-
-  def d1(): (Int, Int) = {
+  
+  def main(args: Array[String]): Unit = {
     val d1t1 = sumDiff(parseD1("d1.txt"))
     val d1t2 = similarityScore(parseD1("d1.txt"))
-    (d1t1,d1t2)
+    assert(d1t1 == 1151792)
+    assert(d1t2 == 21790168)
   }
 }

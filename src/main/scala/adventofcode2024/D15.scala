@@ -156,11 +156,12 @@ object D15 {
     println(map.map{_.mkString("")}.mkString("\n"))
   }
 
-  def d15(): (Int, Int) = {
+  def main(args: Array[String]): Unit = {
     val (parsedMap, parsedMovements) = parseD15("d15.txt")
     val d15t1 = d15T1(parsedMap, parsedMovements)
     val wideMap = widenMap(parsedMap)
     val d15t2 = d15T2(wideMap, parsedMovements)
-    (d15t1, d15t2)
+    assert(d15t1 == 1430536)
+    assert(d15t2 == 1452348)
   }
 }

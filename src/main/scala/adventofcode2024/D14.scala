@@ -60,12 +60,13 @@ object D14 {
     }
   }
 
-  def d14(): Int = {
+  def main(args: Array[String]): Unit = {
     val robots = parsed14("d14.txt")
     val rowCount = 103
     val colCount = 101
     val d14t1 = d14T1(robots, 100, rowCount, colCount)
 
-    d14t1
+    assert(d14t1 == 232253028)
+    // for d14T2 I printed the robots with 8179 secs
   }
 }

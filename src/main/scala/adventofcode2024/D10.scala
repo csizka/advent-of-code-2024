@@ -30,13 +30,13 @@ object D10 {
     zeroCoords.map(coord => calcRouteMetric[Vector](Vector(coord), 0, map, maxX, maxY)).sum
   }
 
-  def printD10(): Unit = {
+  def main(args: Array[String]): Unit = {
     val map = parseMap("d10.txt").map(_.map(_.asDigit))
     val maxX = map.size - 1
     val maxY = map(0).size - 1
     val d10t1 = d10T1(map, maxX, maxY)
     val d10t2 = d10T2(map, maxX, maxY)
-    println(d10t1)
-    println(d10t2)
+    assert(d10t1 == 472)
+    assert(d10t2 == 969)
   }
 }

@@ -40,6 +40,6 @@ object D25 {
   def main(args: Array[String]): Unit = {
     val (keys, locks) = parseD25("d25.txt")
     val d25t1 = d25T1(keys, locks)
-    println(d25t1)
+    assert(d25t1 == 3356)
   }
 }

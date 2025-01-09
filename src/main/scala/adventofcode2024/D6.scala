@@ -97,7 +97,7 @@ object D6 {
     }
   }
 
-  def printD6(): Unit = {
+  def main(args: Array[String]): Unit = {
     val guardMap = parseMap("d6.txt")
     val maxRox = maxRowIx(guardMap)
     val maxCol = maxColIx(guardMap)
@@ -110,8 +110,7 @@ object D6 {
         obsCoordsByY + (y -> (obsCoordsByY.getOrElse(y, Set()) + x)),
         maxRox, maxCol, startPos, Map[Char, Set[(Int, Int)]]()))
 
-    println(d6t1)
-    println(d6t2)
+    assert(d6t1 == 4982)
+    assert(d6t2 == 1663)
   }
-
 }

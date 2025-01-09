@@ -60,7 +60,7 @@ object D4 {
     } else false
   }
 
-  def d4(): (Int, Int) = {
+  def main(args: Array[String]): Unit = {
     val puzzle = parseD4("d4.txt")
     val xCoords = specCoords(puzzle, 'X')
     val aCoords = specCoords(puzzle, 'A')
@@ -68,6 +68,7 @@ object D4 {
     val d4t1 = xCoords.map((x, y) => countXmasFromXCoords(puzzle, (x, y))).sum
     val d4t2 = aCoords.count((x, y) => isXmas(puzzle, (x, y)))
 
-    (d4t1,d4t2)
+    assert(d4t1 == 2483)
+    assert(d4t2 == 1925)
   }
 }

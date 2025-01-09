@@ -72,11 +72,11 @@ object D9 {
     merged.zipWithIndex.map((num, ix) => num * ix.toLong).sum
   }
 
-  def printD9(): Unit = {
+  def main(args: Array[String]): Unit = {
     val (parsedFiles, parsedGaps) = parseD9("d9.txt")
     val d9t1 = d9T1(parsedFiles, parsedGaps)
     val d9t2 = d9T2(parsedFiles, parsedGaps)
-    println(d9t1)
-    println(d9t2)
+    assert(d9t1 == 6279058075753L)
+    assert(d9t2 == 6301361958738L)
   }
 }

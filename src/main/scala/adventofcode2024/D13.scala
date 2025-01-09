@@ -62,12 +62,13 @@ object D13 {
     else None
   }
 
-  def d13(): (Long, Long) = {
+  def main(args: Array[String]): Unit = {
     val input = parseD13("d13.txt")
     val modInput = input.map{ case ((aX, aY), (bX, bY), (targetX, targetY)) => ((aX, aY), (bX, bY), (targetX + 10000000000000L, targetY + 10000000000000L))}
     val d13t1 = input.flatMap(countTokens).sum
     val d13t2 = modInput.flatMap(countTokensV2).sum
 
-    (d13t1, d13t2)
+    assert(d13t1 == 35729)
+    assert(d13t2 == 88584689879723L)
   }
 }

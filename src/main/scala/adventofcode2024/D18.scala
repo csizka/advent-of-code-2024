@@ -103,7 +103,7 @@ object D18 {
     val d18t1 = d18T1(fallenCoords, maxIx, endCoord)
     val d18t2 = d18T2(wallCoords, maxIx, endCoord, 2929)
     val d18t2V2 = d18T2V2(wallCoords, maxIx, endCoord, 0)
-//    assert(d18t2 == Coord(64,44) && d18t1 == 232)
-    println(d18t2V2)
+    assert(d18t2 == Coord(64,44) && d18t1 == 232)
+    assert(d18t2V2 == Coord(64,44))
   }
 }

@@ -67,10 +67,10 @@ object D22 {
 
   def main(args: Array[String]): Unit = {
     val nums = parseD22("d22.txt")
-//    val d22t1 = d22T1(nums)
+    val d22t1 = d22T1(nums)
     val d22t2 = d22T2(nums)
-//    assert(d22t1 == 37327623)
-    println(d22t2)
+    assert(d22t1 == 37327623)
+    assert(d22t2 == 1570)
   }
 
 }

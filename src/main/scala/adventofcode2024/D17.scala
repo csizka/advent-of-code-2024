@@ -139,17 +139,14 @@ object D17 {
     }
   }
 
-  def d17(): Unit = {
+  def main(args: Array[String]): Unit = {
     val (startStatus, instructions) = parseD17("test.txt")
     val d17t1 = doOperation(instructions, startStatus)
     val res = Vector(2,4,1,2,7,5,4,3,0,3,1,7,5,5,3,0)
     val d17t2 = (1 to 100000).find(num => doOperationV2(instructions, startStatus.update('a', num), res) == res)
 
-    println(d17t2)
+    assert(d17t1 == Vector(2,3,4,7,5,7,3,0,7))
+    assert(d17t2.contains(190384609508367L))
   }
 
-  def main(args: Array[String]): Unit = {
-    d17()
-
-  }
 }

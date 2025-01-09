@@ -169,14 +169,12 @@ object D21 {
     }.sum
     res
   }
-
-
+  
   def main(args: Array[String]): Unit = {
     val inputs = parseD21("d21.txt")
     val d21t1 = d21T1(inputs)
     val d21t2 = d21T2(inputs)
     assert(d21t1 == 205160)
     assert(d21t2 == 252473394928452L)
-
   }
 }

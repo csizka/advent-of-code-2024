@@ -103,10 +103,11 @@ object D12 {
   }
 
 
-  def d12(): (Int, Int) = {
+  def main(args: Array[String]): Unit = {
     val map = parseD12("d12.txt")
     val flowers = groupedCoordsByFlower(map)
     val (d12t1, d12t2) = d12(flowers)
-    (d12t1,d12t2)
+    assert(d12t1 == 1461806)
+    assert(d12t2 == 887932)
   }
 }

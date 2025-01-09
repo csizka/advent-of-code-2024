@@ -60,10 +60,11 @@ object D2 {
     reports.count(filter)
   }
 
-  def d2(): (Int, Int) = {
+  def main(args: Array[String]): Unit = {
     val parsedReports = parseD2("d2.txt")
     val d2t1 = countSafeReports(parsedReports, levelsAreSafe)
     val d2t2 = countSafeReports(parsedReports, levelsAreSafeModified)
-    (d2t1,d2t2)
+    assert(d2t1 == 220)
+    assert(d2t2 == 296)
   }
 }

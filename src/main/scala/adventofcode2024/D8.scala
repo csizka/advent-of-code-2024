@@ -73,16 +73,13 @@ object D8 {
     }
   }
 
-
-
-  def printD8(): Unit = {
+  def main(args: Array[String]): Unit = {
     val parsedMap = parseD8("d8.txt")
     val antennas = antennaCoords(parsedMap)
     val d8t1 = collectAllNodes(antennas, parsedMap).size
     val d8t2 = collectAllNodesV2(antennas, parsedMap).size
 
-    println(d8t1)
-    println(d8t2)
-
+    assert(d8t1 == 320)
+    assert(d8t2 == 1157)
   }
 }

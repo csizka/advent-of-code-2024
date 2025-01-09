@@ -1,7 +1,6 @@
 package adventofcode2024
 
 import scala.annotation.tailrec
-import scala.collection.mutable.Map
 import scala.io.Source
 
 object D19 {
@@ -56,7 +55,7 @@ object D19 {
     val (towels, patterns) = parseD19("d19.txt")
     val d19t1 = d19T1(towels, patterns)
     val d19t2 = d19T2(towels, patterns)
-//    println(d19t1)
-    println(d19t2)
+    assert(d19t1 == 251)
+    assert(d19t2 == 616957151871345L)
   }
 }

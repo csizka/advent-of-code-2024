@@ -142,9 +142,7 @@ object D20 {
     val (routeCoords, startCoord, endCoord) = getRouteCoords(parsedMap)
     val d20t1 = d20T1(parsedMap, routeCoords, startCoord, endCoord)
     val d20t2 = d20T2(parsedMap, routeCoords, startCoord, endCoord)
-//    assert(d20t1 == 1395)
+    assert(d20t1 == 1395)
     assert(d20t2 == 993178)
   }
-
-
 }

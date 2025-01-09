@@ -1,5 +1,4 @@
 package adventofcode2024
-import adventofcode2024.D15.Coord
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -51,7 +50,7 @@ object D16 {
 
   @tailrec
   def cheapestRoute(
-    toExplore: PriorityQueue[Route],
+    toExplore: mutable.PriorityQueue[Route],
     routeCoords: Set[Coord],
     foundRoutes: Map[Coord, Route],
     startCoord: Coord,
@@ -125,7 +124,7 @@ object D16 {
 
   @tailrec
   def cheapestRoutes(
-    toExplore: PriorityQueue[StateRoute],
+    toExplore: mutable.PriorityQueue[StateRoute],
     routeCoords: Set[Coord],
     foundRoutes: Map[State, Set[StateRoute]],
     startCoord: Coord,
@@ -180,20 +179,13 @@ object D16 {
     }
   }
 
-  def d16(): (Int, Int) = {
+  def main(args: Array[String]): Unit = {
     val map = parseD16("d16.txt")
     val (routeCoords, startCoord, targetCoord) = getRouteCoords(map)
     val d16t1 = d16T1(routeCoords, startCoord, targetCoord)
     val d16t2 = d16T2(routeCoords, startCoord, targetCoord, map)
 
-    (d16t1,d16t2)
+    assert(d16t1 == 105508)
+    assert(d16t2 == 548)
   }
-
-  def main(args: Array[String]): Unit = {
-
-    d16()
-
-  }
-
-
 }

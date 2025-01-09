@@ -39,12 +39,12 @@ object D11 {
     } else stones.values.sum
   }
 
-  def printD11(): Unit = {
+  def main(args: Array[String]): Unit = {
     val stones = parseD11("d11.txt")
     val startMap = stones.groupBy(identity).map { case (x,y) => (x, y.size.toLong)}
     val d11t1 = d11(25, startMap)
     val d11t2 = d11(75, startMap)
-    println(d11t1)
-    println(d11t2)
+    assert(d11t1 == 183248)
+    assert(d11t2 == 218811774248729L)
   }
 }

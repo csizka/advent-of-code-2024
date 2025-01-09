@@ -64,12 +64,12 @@ object D5 {
     lst.map(reorderedMiddleNum(_, orderMap)).sum
   }
 
-  def printD5(): Unit = {
+  def main(args: Array[String]): Unit = {
     val (orderMap, pagesInOrder) = parseRules("d5.txt")
     val d5t1 = sumRightOrderMiddleNums(pagesInOrder, orderMap)
     val incorrectOrders = pagesInOrder.filter(checkOrder(_, orderMap) == 0)
     val d5t2 = sumIncorrectlyOrderedMiddles(incorrectOrders, orderMap)
-    println(d5t1)
-    println(d5t2)
+    assert(d5t1 == 5509)
+    assert(d5t2 == 4407)
   }
 }

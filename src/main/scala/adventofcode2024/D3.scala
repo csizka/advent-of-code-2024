@@ -46,11 +46,12 @@ object D3 {
     res
   }
 
-  def d3(): (Int, Int) = {
+  def main(args: Array[String]): Unit = {
     val parsedInput = parseD3("d3.txt")
     val d3t1 = d3T1(parsedInput)
     val d3t2 = d3T2(parsedInput)
 
-    (d3t1,d3t2)
+    assert(d3t1 == 174960292)
+    assert(d3t2 == 56275602)
   }  
 }

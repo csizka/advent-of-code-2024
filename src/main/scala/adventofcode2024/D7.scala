@@ -32,12 +32,12 @@ object D7 {
     case _ => false
   }
 
-  def printD7(): Unit = {
+  def main(args: Array[String]): Unit = {
     val parsedInput = parsed7("d7.txt")
     val d7t1 = parsedInput.filter{ case (total, parts) => canEqualT1(total, parts, 0)}.map(_._1).sum
     val d7t2 = parsedInput.filter{ case (total, parts) => canEqualT2(total, parts, 0)}.map(_._1).sum
-    println(d7t1)
-    println(d7t2)
+    assert(d7t1 == 66343330034722L)
+    assert(d7t2 == 637696070419031L)
   }
 
 }
