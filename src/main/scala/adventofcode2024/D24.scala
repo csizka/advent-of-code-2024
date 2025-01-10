@@ -52,7 +52,11 @@ object D24 {
     def loop(curQueue: Queue[String], ordered: Vector[Gate], explored: Set[String]): Vector[Gate] = curQueue match {
       case curExplored +: rest if outPuts.contains(curExplored) =>
         val newlyExplored =
-          outPuts(curExplored).filter{ curOut => explored.contains(gates(curOut).lhsIn) && explored.contains(gates(curOut).rhsIn)}
+          outPuts(curExplored).filter{ curOut =>
+            explored.contains(gates(curOut).lhsIn) &&
+            explored.contains(gates(curOut).rhsIn) &&
+            !explored.contains(curOut)
+          }
         val gatesToAdd = newlyExplored.map { curVar =>
           val curIngate = gates(curVar)
           Gate(curIngate.lhsIn, curIngate.rhsIn, curVar, curIngate.operation)
@@ -134,23 +138,51 @@ object D24 {
     val fstDeps = deps(fstToSwap)
     val sndDeps = deps(sndToSwap)
     val newDeps = deps + (fstToSwap -> sndDeps) + (sndToSwap -> fstDeps)
-    val newOutputs = outputs +
-      (fstDeps.lhsIn -> (outputs(fstDeps.lhsIn) - fstToSwap + sndToSwap)) +
-      (fstDeps.rhsIn -> (outputs(fstDeps.rhsIn) - fstToSwap + sndToSwap)) +
-      (sndDeps.lhsIn -> (outputs(sndDeps.lhsIn) - sndToSwap + fstToSwap)) +
-      (sndDeps.rhsIn -> (outputs(sndDeps.rhsIn) - sndToSwap + fstToSwap))
-    (newDeps, newOutputs, orderToEval(newDeps, inputVars, newOutputs))
+    val newOutputs =
+      if (fstDeps.lhsIn != sndDeps.lhsIn
+        && fstDeps.lhsIn != sndDeps.rhsIn
+        && fstDeps.rhsIn != sndDeps.lhsIn
+        && fstDeps.rhsIn != sndDeps.rhsIn){
+        outputs +
+          (fstDeps.lhsIn -> (outputs(fstDeps.lhsIn) - fstToSwap + sndToSwap)) +
+          (fstDeps.rhsIn -> (outputs(fstDeps.rhsIn) - fstToSwap + sndToSwap)) +
+          (sndDeps.lhsIn -> (outputs(sndDeps.lhsIn) - sndToSwap + fstToSwap)) +
+          (sndDeps.rhsIn -> (outputs(sndDeps.rhsIn) - sndToSwap + fstToSwap))
+      }
+      else if (fstDeps.lhsIn == sndDeps.lhsIn && fstDeps.rhsIn != sndDeps.rhsIn)
+        outputs +
+          (fstDeps.rhsIn -> (outputs(fstDeps.rhsIn) - fstToSwap + sndToSwap)) +
+          (sndDeps.rhsIn -> (outputs(sndDeps.rhsIn) - sndToSwap + fstToSwap))
+      else if (fstDeps.rhsIn == sndDeps.lhsIn && fstDeps.lhsIn != sndDeps.rhsIn)
+        outputs +
+          (fstDeps.lhsIn -> (outputs(fstDeps.lhsIn) - fstToSwap + sndToSwap)) +
+          (sndDeps.rhsIn -> (outputs(sndDeps.rhsIn) - sndToSwap + fstToSwap))
+      else if (fstDeps.lhsIn == sndDeps.rhsIn && fstDeps.rhsIn != sndDeps.lhsIn)
+        outputs +
+          (fstDeps.rhsIn -> (outputs(fstDeps.rhsIn) - fstToSwap + sndToSwap)) +
+          (sndDeps.lhsIn -> (outputs(sndDeps.lhsIn) - sndToSwap + fstToSwap))
+      else if (fstDeps.rhsIn == sndDeps.rhsIn && fstDeps.lhsIn != sndDeps.lhsIn)
+        outputs +
+          (fstDeps.lhsIn -> (outputs(fstDeps.lhsIn) - fstToSwap + sndToSwap)) +
+          (sndDeps.lhsIn -> (outputs(sndDeps.lhsIn) - sndToSwap + fstToSwap))
+      else outputs
+    val newOrder = orderToEval(newDeps, inputVars, newOutputs)
+    (newDeps, newOutputs, newOrder)
   }
 
   def d24T2(
     vals: Map[String, Int],
     dependencies: Map[String, InGate],
-    outputs: Map[String, Set[String]]): Boolean = {
+    outputs: Map[String, Set[String]],
+    swapped: Vector[String]
+  ): Vector[String] = {
     val expRes = getExpectedRes(vals)
     val order = orderToEval(dependencies, vals.keySet, outputs)
     val finalVals = calcFinalVals(order, vals)
     val actualRes = calcDecimalForVars(finalVals, 'z')
-    actualRes == expRes
+    if (actualRes == expRes)
+      swapped.sorted
+    else Vector()
   }
 
   def addVarsToMap(char: String, toAdd: Long): Map[String, Int] = {
@@ -164,8 +196,6 @@ object D24 {
     val finalVals = calcFinalVals(order, allXVals ++ allYVals)
     val expectedZs = (xs + ys).toBinaryString.reverse
     val actualZs = calcDecimalForVars(finalVals, 'z').toBinaryString.reverse.padTo(46, '0')
-    println(s"exp:    $expectedZs")
-    println(s"actual: $actualZs")
     actualZs.indices.find( ix => expectedZs(ix) != actualZs(ix))
   }
 
@@ -221,10 +251,11 @@ object D24 {
   def main(args: Array[String]): Unit = {
     val (gates, startVals) = parseD24("d24.txt")
     val (dependencies, outputs) = getDepsAndIngates(gates)
-    val (newDeps, newOutputs, newOrder) =
-      swaps(Vector("z15", "fph", "z21", "gds", "wrk", "jrs"), dependencies, startVals.keySet, Vector[Gate](), outputs)
+    val ogOrder = orderToEval(dependencies, startVals.keySet, outputs)
+    val toSwap = Vector("z15", "fph", "z21", "gds", "wrk", "jrs", "cqk", "z34")
+    val (newDeps, newOutputs, newOrder) = swaps(toSwap, dependencies, startVals.keySet, Vector[Gate](), outputs)
 //    val d24t1 = d24T1(gates, startVals)
-    val d24t2 = d24T2(startVals, newDeps, newOutputs)
+    val d24t2 = d24T2(startVals, newDeps, newOutputs, toSwap)
     visualizeGraph(newDeps)
     val fstBadGate = findFstBadGate(newDeps, newOrder)
     println(fstBadGate)
