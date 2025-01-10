@@ -11,6 +11,7 @@ import guru.nidi.graphviz.model.Factory.{graph, node}
 import guru.nidi.graphviz.model.Link.to
 
 import java.io.File
+import scala.util.Random
 
 object D24 {
   enum Operation {
@@ -49,7 +50,7 @@ object D24 {
     val startQueue = Queue[String]().enqueueAll(inputVars)
     @tailrec
     def loop(curQueue: Queue[String], ordered: Vector[Gate], explored: Set[String]): Vector[Gate] = curQueue match {
-      case curExplored +: rest =>
+      case curExplored +: rest if outPuts.contains(curExplored) =>
         val newlyExplored =
           outPuts(curExplored).filter{ curOut => explored.contains(gates(curOut).lhsIn) && explored.contains(gates(curOut).rhsIn)}
         val gatesToAdd = newlyExplored.map { curVar =>
@@ -60,6 +61,7 @@ object D24 {
         val nextExplored = explored ++ newlyExplored
         val nextQueue = rest.enqueueAll(newlyExplored)
         loop(nextQueue, nextOrdered, nextExplored)
+      case curExplored +: rest => loop(rest, ordered, explored)
       case Queue() => ordered
     }
 
@@ -81,17 +83,22 @@ object D24 {
     (dependencies, outputs)
   }
 
-  def d24T1(gates: Set[Gate], vals: Map[String, Int]): Long = {
-    val (dependencies, outputs) = getDepsAndIngates(gates)
-    val order = orderToEval(dependencies, vals.keySet, outputs)
-    val finalVals = order.foldLeft(vals){ case (curVals, Gate(fstName, sndName, out, op)) =>
+  def calcFinalVals(order: Vector[Gate], vals: Map[String, Int]): Map[String, Int] = {
+    order.foldLeft(vals) { case (curVals, Gate(fstName, sndName, out, op)) =>
       val fst = curVals(fstName)
       val snd = curVals(sndName)
       op match {
-      case Operation.OR => curVals + (out -> (fst | snd))
-      case Operation.XOR => curVals + (out -> (fst ^ snd))
-      case Operation.AND => curVals + (out -> (fst & snd))
-    }}
+        case Operation.OR => curVals + (out -> (fst | snd))
+        case Operation.XOR => curVals + (out -> (fst ^ snd))
+        case Operation.AND => curVals + (out -> (fst & snd))
+      }
+    }
+  }
+
+  def d24T1(gates: Set[Gate], vals: Map[String, Int]): Long = {
+    val (dependencies, outputs) = getDepsAndIngates(gates)
+    val order = orderToEval(dependencies, vals.keySet, outputs)
+    val finalVals = calcFinalVals(order, vals)
     val res = calcDecimalForVars(finalVals, 'z')
     res
   }
@@ -123,7 +130,7 @@ object D24 {
     sndToSwap: String,
     inputVars: Set[String],
     outputs: Map[String, Set[String]]
-  ): Vector[Gate] = {
+  ): (Map[String, InGate], Map[String, Set[String]], Vector[Gate]) = {
     val fstDeps = deps(fstToSwap)
     val sndDeps = deps(sndToSwap)
     val newDeps = deps + (fstToSwap -> sndDeps) + (sndToSwap -> fstDeps)
@@ -132,12 +139,48 @@ object D24 {
       (fstDeps.rhsIn -> (outputs(fstDeps.rhsIn) - fstToSwap + sndToSwap)) +
       (sndDeps.lhsIn -> (outputs(sndDeps.lhsIn) - sndToSwap + fstToSwap)) +
       (sndDeps.rhsIn -> (outputs(sndDeps.rhsIn) - sndToSwap + fstToSwap))
-    orderToEval(newDeps, inputVars, newOutputs)
+    (newDeps, newOutputs, orderToEval(newDeps, inputVars, newOutputs))
   }
 
-  def d24T2(vals: Map[String, Int], numToSwap: Int, dependencies: Map[String, InGate],  outputs: Map[String, Set[String]]): Vector[String] = {
+  def d24T2(
+    vals: Map[String, Int],
+    dependencies: Map[String, InGate],
+    outputs: Map[String, Set[String]]): Boolean = {
     val expRes = getExpectedRes(vals)
-    ???
+    val order = orderToEval(dependencies, vals.keySet, outputs)
+    val finalVals = calcFinalVals(order, vals)
+    val actualRes = calcDecimalForVars(finalVals, 'z')
+    actualRes == expRes
+  }
+
+  def addVarsToMap(char: String, toAdd: Long): Map[String, Int] = {
+    val binary = toAdd.toBinaryString.reverse
+    binary.zipWithIndex.map { case (value, ix) => (char + ix.toString.reverse.padTo(2, '0').reverse, value.asDigit) }.toMap
+  }
+
+  def findBadGateWithInputs(xs: Long, ys: Long, order: Vector[Gate]): Option[Int] = {
+    val allXVals = addVarsToMap("x", xs)
+    val allYVals = addVarsToMap("y", ys)
+    val finalVals = calcFinalVals(order, allXVals ++ allYVals)
+    val expectedZs = (xs + ys).toBinaryString.reverse
+    val actualZs = calcDecimalForVars(finalVals, 'z').toBinaryString.reverse.padTo(46, '0')
+    println(s"exp:    $expectedZs")
+    println(s"actual: $actualZs")
+    actualZs.indices.find( ix => expectedZs(ix) != actualZs(ix))
+  }
+
+  def findFstBadGate(dependencies: Map[String, InGate], order: Vector[Gate]): Option[Int] = {
+    val rand = new Random(42)
+    val start = Math.pow(2,44).toLong
+    val end = Math.pow(2,45).toLong
+    val minErrorIx =
+      (1 to 50)
+        .toVector
+        .map(_ => start + rand.nextLong((end - start) + 1))
+        .grouped(2)
+        .flatMap { case Vector(fst, snd) => findBadGateWithInputs(fst, snd, order)}
+        .minOption
+    minErrorIx
   }
 
   def collectLinks(dependencies: Map[String, InGate]): Seq[guru.nidi.graphviz.model.LinkSource] = {
@@ -150,20 +193,42 @@ object D24 {
     }
   }
 
-  def main(args: Array[String]): Unit = {
-    val (gates, startVals) = parseD24("d24.txt")
-    val (dependencies, outputs) = getDepsAndIngates(gates)
-//    val d24t1 = d24T1(gates, startVals)
-//    val d24t2 = d24T2(startVals, 1, dependencies, outputs)
-
+  def visualizeGraph(dependencies: Map[String, InGate]): Unit = {
     val g = graph("graph")
       .directed
       .graphAttr.`with`(Rank.dir(LEFT_TO_RIGHT))
       .nodeAttr.`with`(Font.name("arial"))
       .linkAttr.`with`("class", "link-class")
-      .`with`(collectLinks(dependencies)*)
+      .`with`(collectLinks(dependencies) *)
 
     Graphviz.fromGraph(g).height(100).render(Format.SVG).toFile(new File("example/graph.svg"))
+  }
+
+  @tailrec
+  def swaps(
+    toSwap: Vector[String],
+    deps:  Map[String, InGate],
+    startVals:  Set[String],
+    order: Vector[Gate],
+    outputs:  Map[String, Set[String]]
+  ): (Map[String, InGate], Map[String, Set[String]], Vector[Gate]) = toSwap match {
+    case fst +: snd +: rest =>
+      val (newDeps, newOutputs, newOrder) = swapGates(deps, fst, snd, startVals, outputs)
+      swaps(rest, newDeps, startVals, newOrder, newOutputs)
+    case Vector() => (deps, outputs, order)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val (gates, startVals) = parseD24("d24.txt")
+    val (dependencies, outputs) = getDepsAndIngates(gates)
+    val (newDeps, newOutputs, newOrder) =
+      swaps(Vector("z15", "fph", "z21", "gds", "wrk", "jrs"), dependencies, startVals.keySet, Vector[Gate](), outputs)
+//    val d24t1 = d24T1(gates, startVals)
+    val d24t2 = d24T2(startVals, newDeps, newOutputs)
+    visualizeGraph(newDeps)
+    val fstBadGate = findFstBadGate(newDeps, newOrder)
+    println(fstBadGate)
 //    println(d24t1)
+    println(d24t2)
   }
 }
