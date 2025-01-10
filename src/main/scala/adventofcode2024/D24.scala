@@ -121,19 +121,6 @@ object D24 {
     calcDecimalForVars(vals, 'z') == expected
   }
 
-  @tailrec
-  def collectAllsDeps(toExplore: Set[String], collected: Set[String], deps: Map[String, (String, String)]): Set[String] = {
-    if (toExplore.isEmpty) collected
-    else {
-      val nextToExplore = toExplore.map(deps.get).flatMap{ case Some((fst,snd)) => Set(fst, snd)}
-      collectAllsDeps(nextToExplore, collected ++ toExplore, deps)
-    }
-  }
-
-  def possibleSwaps(gates: Set[Gate], toSwap: Gate, dependencies: Map[String, (String, String)]): Set[String] = {
-    gates.map(_.out) -- collectAllsDeps(Set(toSwap.out), Set(), dependencies)
-  }
-
   def swapGates(
     deps: Map[String, InGate],
     fstToSwap: String,
@@ -147,6 +134,19 @@ object D24 {
     (newDeps, newOrder)
   }
 
+  @tailrec
+  def swapsSeveralGates(
+    toSwap: Vector[String],
+    deps: Map[String, InGate],
+    startVals: Set[String],
+    order: Vector[Gate]
+  ): (Map[String, InGate], Vector[Gate]) = toSwap match {
+    case fst +: snd +: rest =>
+      val (newDeps, newOrder) = swapGates(deps, fst, snd, startVals)
+      swapsSeveralGates(rest, newDeps, startVals, newOrder)
+    case Vector() => (deps, order)
+  }
+
   def d24T2(
     vals: Map[String, Int],
     dependencies: Map[String, InGate],
@@ -155,8 +155,8 @@ object D24 {
     val expRes = getExpectedRes(vals)
     val order = orderToEval(dependencies, vals.keySet)
     val finalVals = calcFinalVals(order, vals)
-    val actualRes = calcDecimalForVars(finalVals, 'z')
-    if (actualRes == expRes)
+    val valisRes = resIsValid(finalVals, expRes)
+    if (valisRes)
       swapped.sorted
     else Vector()
   }
@@ -210,25 +210,12 @@ object D24 {
     Graphviz.fromGraph(g).height(100).render(Format.SVG).toFile(new File("example/graph.svg"))
   }
 
-  @tailrec
-  def swaps(
-    toSwap: Vector[String],
-    deps:  Map[String, InGate],
-    startVals:  Set[String],
-    order: Vector[Gate]
-  ): (Map[String, InGate], Vector[Gate]) = toSwap match {
-    case fst +: snd +: rest =>
-      val (newDeps, newOrder) = swapGates(deps, fst, snd, startVals)
-      swaps(rest, newDeps, startVals, newOrder)
-    case Vector() => (deps, order)
-  }
-
   def main(args: Array[String]): Unit = {
     val (gates, startVals) = parseD24("d24.txt")
     val dependencies = getDeps(gates)
     val ogOrder = orderToEval(dependencies, startVals.keySet)
     val toSwap = Vector("z15", "fph", "z21", "gds", "wrk", "jrs", "cqk", "z34")
-    val (newDeps, newOrder) = swaps(toSwap, dependencies, startVals.keySet, Vector[Gate]())
+    val (newDeps, newOrder) = swapsSeveralGates(toSwap, dependencies, startVals.keySet, Vector[Gate]())
     val d24t1 = d24T1(gates, startVals)
     val d24t2 = d24T2(startVals, newDeps, toSwap)
     val fstBadGate = findFstBadGate(newDeps, newOrder)
